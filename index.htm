@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Quiz App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        .timer-circle {
+            stroke-dasharray: 283;
+            stroke-dashoffset: 283;
+            transition: stroke-dashoffset 1s linear;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        .option:hover {
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Dark Mode Toggle -->
+        <div class="flex justify-end mb-4">
+            <button id="darkModeToggle" class="bg-gray-300 dark:bg-gray-700 px-4 py-2 rounded-md transition">
+                Toggle Dark Mode
+            </button>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="startScreen" class="text-center fade-in">
+            <h1 class="text-4xl font-bold mb-6">Interactive Quiz Challenge</h1>
+            <p class="text-lg mb-8">Test your knowledge! Choose a category and race against time.</p>
+            <div class="grid md:grid-cols-3 gap-4 mb-8">
+                <button data-category="science" class="category-btn bg-blue-500 text-white py-6 px-4 rounded-lg hover:bg-blue-600 transition transform hover:scale-105">
+                    <div class="text-2xl mb-2">🧪</div>
+                    Science
+                </button>
+                <button data-category="history" class="category-btn bg-green-500 text-white py-6 px-4 rounded-lg hover:bg-green-600 transition transform hover:scale-105">
+                    <div class="text-2xl mb-2">📜</div>
+                    History
+                </button>
+                <button data-category="trivia" class="category-btn bg-purple-500 text-white py-6 px-4 rounded-lg hover:bg-purple-600 transition transform hover:scale-105">
+                    <div class="text-2xl mb-2">🎉</div>
+                    Trivia
+                </button>
+            </div>
+            <p class="text-sm">Each question has a 30-second timer. Earn bonus points for quick answers!</p>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quizScreen" class="hidden fade-in">
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-lg font-semibold">Question <span id="questionNumber">1</span> of <span id="totalQuestions">10</span></span>
+                    <span class="text-lg font-semibold">Score: <span id="score">0</span></span>
+                </div>
+                <div class="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-3">
+                    <div id="progressBar" class="progress-bar bg-blue-500 h-3 rounded-full" style="width: 10%"></div>
+                </div>
+            </div>
+            <div class="text-center mb-6">
+                <div class="relative inline-block">
+                    <svg width="100" height="100" class="timer-circle">
+                        <circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="5"/>
+                        <circle id="timerCircle" cx="50" cy="50" r="45" fill="none" stroke="#3b82f6" stroke-width="5" stroke-dasharray="283" stroke-dashoffset="283"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center text-lg font-bold" id="timerText">30</div>
+                </div>
+            </div>
+            <div id="questionContainer" class="mb-8">
+                <h2 class="text-2xl font-semibold mb-4" id="questionText">Loading question...</h2>
+                <div class="grid gap-4">
+                    <button class="option w-full text-left bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer" data-option="0"></button>
+                    <button class="option w-full text-left bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer" data-option="1"></button>
+                    <button class="option w-full text-left bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer" data-option="2"></button>
+                    <button class="option w-full text-left bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer" data-option="3"></button>
+                </div>
+            </div>
+            <div class="text-center">
+                <button id="nextBtn" class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition hidden">Next Question</button>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="resultsScreen" class="hidden text-center fade-in">
+            <h1 class="text-4xl font-bold mb-6">Quiz Complete!</h1>
+            <div class="mb-8">
+                <div class="text-6xl mb-4">🏆</div>
+                <p class="text-2xl mb-4">Your Score: <span id="finalScore">0</span> / <span id="maxScore">100</span></p>
+                <p class="text-lg mb-4" id="performanceMessage">Great job!</p>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-4 max-w-md mx-auto">
+                    <h3 class="text-lg font-semibold mb-2">Statistics</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>Correct Answers: <span id="correctCount">0</span></div>
+                        <div>Time Bonus: <span id="timeBonus">0</span> points</div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-center gap-4">
+                <button id="playAgainBtn" class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition">Play Again</button>
+                <button id="changeCategoryBtn" class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition">Change Category</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Quiz data organized by category
+        const quizData = {
+            science: [
+                {
+                    question: "What is the chemical symbol for gold?",
+                    options: ["Go", "Gd", "Au", "Ag"],
+                    correct: 2
+                },
+                {
+                    question: "Which planet is known as the Red Planet?",
+                    options: ["Venus", "Mars", "Jupiter", "Saturn"],
+                    correct: 1
+                },
+                {
+                    question: "What is the boiling point of water in Celsius?",
+                    options: ["0°C", "100°C", "50°C", "150°C"],
+                    correct: 1
+                },
+                {
+                    question: "What type of animal is a Komodo dragon?",
+                    options: ["Bird", "Reptile", "Mammal", "Fish"],
+                    correct: 1
+                },
+                {
+                    question: "What process do plants use to make food?",
+                    options: ["Respiration", "Photosynthesis", "Transpiration", "Evaporation"],
+                    correct: 1
+                },
+                {
+                    question: "What is the atomic number of carbon?",
+                    options: ["4", "6", "8", "12"],
+                    correct: 1
+                },
+                {
+                    question: "Which gas is essential for respiration?",
+                    options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Hydrogen"],
+                    correct: 1
+                },
+                {
+                    question: "What is the hardest natural substance on Earth?",
+                    options: ["Gold", "Diamond", "Iron", "Quartz"],
+                    correct: 1
+                },
+                {
+                    question: "Which layer of the Earth is liquid?",
+                    options: ["Crust", "Mantle", "Outer Core", "Inner Core"],
+                    correct: 2
+                },
+                {
+                    question: "What is the pH level of pure water?",
+                    options: ["1", "7", "14", "0"],
+                    correct: 1
+                }
+            ],
+            history: [
+                {
+                    question: "In which year did World War II end?",
+                    options: ["1940", "1945", "1950", "1939"],
+                    correct: 1
+                },
+                {
+                    question: "Who was the first President of the United States?",
+                    options: ["Thomas Jefferson", "John Adams", "George Washington", "Abraham Lincoln"],
+                    correct: 2
+                },
+                {
+                    question: "Which ancient civilization built the pyramids at Giza?",
+                    options: ["Maya", "Roman", "Egyptian", "Greek"],
+                    correct: 2
+                },
+                {
+                    question: "The Magna Carta was signed in which year?",
+                    options: ["1066", "1215", "1492", "1776"],
+                    correct: 1
+                },
+                {
+                    question: "Which war was fought between the North and South regions in the United States?",
+                    options: ["World War I", "American Civil War", "Vietnam War", "American Revolution"],
+                    correct: 1
+                },
+                {
+                    question: "Who was the British monarch during the American Revolution?",
+                    options: ["Queen Elizabeth I", "King George III", "Queen Victoria", "King Henry VIII"],
+                    correct: 1
+                },
+                {
+                    question: "The Berlin Wall fell in which year?",
+                    options: ["1989", "1991", "1979", "1985"],
+                    correct: 0
+                },
+                {
+                    question: "Which country was first to grant women the right to vote?",
+                    options: ["United States", "United Kingdom", "New Zealand", "Australia"],
+                    correct: 2
+                },
+                {
+                    question: "The Renaissance began in which country?",
+                    options: ["Germany", "Italy", "France", "Spain"],
+                    correct: 1
+                },
+                {
+                    question: "Nelson Mandela was released from prison in which year?",
+                    options: ["1990", "1994", "1988", "1992"],
+                    correct: 0
+                }
+            ],
+            trivia: [
+                {
+                    question: "Which animal is known as the 'King of the Jungle'?",
+                    options: ["Tiger", "Lion", "Elephant", "Gorilla"],
+                    correct: 1
+                },
+                {
+                    question: "What is the most used programming language in the world?",
+                    options: ["JavaScript", "Python", "Java", "C++"],
+                    correct: 1
+                },
+                {
+                    question: "Which is the longest river in the world?",
+                    options: ["Amazon", "Nile", "Yangtze", "Mississippi"],
+                    correct: 1
+                },
+                {
+                    question: "How many continents are there?",
+                    options: ["5", "6", "7", "8"],
+                    correct: 2
+                },
+                {
+                    question: "What year did the first iPhone release?",
+                    options: ["2005", "2006", "2007", "2008"],
+                    correct: 2
+                },
+                {
+                    question: "Which sport is known as 'America's Pastime'?",
+                    options: ["Football", "Basketball", "Baseball", "Soccer"],
+                    correct: 2
+                },
+                {
+                    question: "What is the capital of Japan?",
+                    options: ["Seoul", "Tokyo", "Beijing", "Shanghai"],
+                    correct: 1
+                },
+                {
+                    question: "Which element has the chemical symbol 'Fe'?",
+                    options: ["Iron", "Silver", "Gold", "Copper"],
+                    correct: 0
+                },
+                {
+                    question: "What is the largest mammal in the world?",
+                    options: ["Elephant", "Blue Whale", "Giraffe", "Lion"],
+                    correct: 1
+                },
+                {
+                    question: "Which language has the most native speakers?",
+                    options: ["English", "Mandarin Chinese", "Spanish", "Hindi"],
+                    correct: 1
+                }
+            ]
+        };
+
+        // Game state
+        let currentCategory = '';
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let correctAnswers = 0;
+        let timer;
+        let timeLeft = 30;
+        let timerCircle;
+
+        // Audio context for sound effects
+        let audioContext;
+
+        // Initialize audio context
+        function initAudio() {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        // Sound effect function
+        function playSound(type) {
+            if (!audioContext) return;
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            if (type === 'correct') {
+                oscillator.frequency.value = 800;
+            } else if (type === 'incorrect') {
+                oscillator.frequency.value = 400;
+            } else if (type === 'timer') {
+                oscillator.frequency.value = 200;
+            }
+
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.2);
+        }
+
+        // DOM elements
+        const startScreen = document.getElementById('startScreen');
+        const quizScreen = document.getElementById('quizScreen');
+        const resultsScreen = document.getElementById('resultsScreen');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const questionNumber = document.getElementById('questionNumber');
+        const totalQuestions = document.getElementById('totalQuestions');
+        const progressBar = document.getElementById('progressBar');
+        const timerText = document.getElementById('timerText');
+        const questionText = document.getElementById('questionText');
+        const optionButtons = document.querySelectorAll('.option');
+        const nextBtn = document.getElementById('nextBtn');
+        const finalScore = document.getElementById('finalScore');
+        const maxScore = document.getElementById('maxScore');
+        const correctCount = document.getElementById('correctCount');
+        const timeBonus = document.getElementById('timeBonus');
+        const performanceMessage = document.getElementById('performanceMessage');
+
+        // Dark mode toggle
+        darkModeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+        });
+
+        // Category selection
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentCategory = btn.dataset.category;
+                startQuiz();
+            });
+        });
+
+        // Start quiz
+        function startQuiz() {
+            currentQuestions = quizData[currentCategory].sort(() => Math.random() - 0.5).slice(0, 10);
+            currentQuestionIndex = 0;
+            score = 0;
+            correctAnswers = 0;
+            totalQuestions.textContent = currentQuestions.length;
+            startScreen.classList.add('hidden');
+            resultsScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            loadQuestion();
+            initAudio();
+        }
+
+        // Load question
+        function loadQuestion() {
+            const question = currentQuestions[currentQuestionIndex];
+            questionText.textContent = question.question;
+            optionButtons.forEach((btn, index) => {
+                btn.textContent = question.options[index];
+                btn.classList.remove('bg-green-500', 'bg-red-500', 'text-white');
+                btn.disabled = false;
+            });
+            questionNumber.textContent = currentQuestionIndex + 1;
+            progressBar.style.width = `${((currentQuestionIndex + 1) / currentQuestions.length) * 100}%`;
+            timeLeft = 30;
+            timerText.textContent = timeLeft;
+            nextBtn.classList.add('hidden');
+            startTimer();
+        }
+
+        // Start timer
+        function startTimer() {
+            timerCircle = document.getElementById('timerCircle');
+            timerCircle.style.strokeDashoffset = 283;
+            const circumference = 283;
+            const timeStep = circumference / 30;
+
+            timer = setInterval(() => {
+                timeLeft--;
+                timerText.textContent = timeLeft;
+                timerCircle.style.strokeDashoffset = timeStep * timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    playSound('timer');
+                    disableOptions();
+                    setTimeout(nextQuestion, 2000);
+                }
+            }, 1000);
+        }
+
+        // Handle option click
+        optionButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const selected = parseInt(btn.dataset.option);
+                const correct = currentQuestions[currentQuestionIndex].correct;
+                clearInterval(timer);
+
+                if (selected === correct) {
+                    btn.classList.add('bg-green-500', 'text-white');
+                    const bonus = Math.max(0, timeLeft - 10) * 2;
+                    score += 10 + bonus;
+                    correctAnswers++;
+                    playSound('correct');
+                } else {
+                    btn.classList.add('bg-red-500', 'text-white');
+                    optionButtons[correct].classList.add('bg-green-500', 'text-white');
+                    playSound('incorrect');
+                }
+
+                disableOptions();
+                nextBtn.classList.remove('hidden');
+            });
+        });
+
+        // Disable options
+        function disableOptions() {
+            optionButtons.forEach(btn => btn.disabled = true);
+        }
+
+        // Next question
+        nextBtn.addEventListener('click', nextQuestion);
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < currentQuestions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        // Show results
+        function showResults() {
+            quizScreen.classList.add('hidden');
+            resultsScreen.classList.remove('hidden');
+            finalScore.textContent = score;
+            maxScore.textContent = currentQuestions.length * 10;
+            correctCount.textContent = correctAnswers;
+            const timeBonusPoints = score - (correctAnswers * 10);
+            timeBonus.textContent = timeBonusPoints;
+
+            const percentage = (correctAnswers / currentQuestions.length) * 100;
+            if (percentage >= 90) {
+                performanceMessage.textContent = "Outstanding! You're a quiz master!";
+            } else if (percentage >= 70) {
+                performanceMessage.textContent = "Great job! Keep practicing!";
+            } else if (percentage >= 50) {
+                performanceMessage.textContent = "Good effort! Try again for a better score.";
+            } else {
+                performanceMessage.textContent = "Keep trying! Practice makes perfect.";
+            }
+
+            // Save high score
+            const highScores = JSON.parse(localStorage.getItem('quizHighScores') || '[]');
+            highScores.push({ score, category: currentCategory, date: new Date().toISOString() });
+            highScores.sort((a, b) => b.score - a.score);
+            localStorage.setItem('quizHighScores', JSON.stringify(highScores.slice(0, 5)));
+        }
+
+        // Play again
+        document.getElementById('playAgainBtn').addEventListener('click', () => {
+            startQuiz();
+        });
+
+        // Change category
+        document.getElementById('changeCategoryBtn').addEventListener('click', () => {
+            resultsScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        });
+
+        // Load high scores on start
+        window.onload = () => {
+            const highScores = JSON.parse(localStorage.getItem('quizHighScores') || '[]');
+            if (highScores.length > 0) {
+                console.log('High Scores:', highScores);
+            }
+        };
+    </script>
+</body>
+</html>
+</content>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>History Quiz</title>
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Your custom styles -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
+
+  <!-- START SCREEN -->
+  <div id="startScreen" class="h-screen flex flex-col items-center justify-center">
+    <h1 class="text-4xl font-bold mb-4">Ultimate History Quiz</h1>
+    <button id="startBtn" class="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700">Start Quiz</button>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div id="quizScreen" class="hidden flex flex-col items-center justify-center min-h-screen">
+    <div class="w-80 h-80 mb-4 relative">
+      <svg class="w-full h-full transform -rotate-90">
+        <circle cx="160" cy="160" r="140" stroke="#ddd" stroke-width="20" fill="none"/>
+        <circle id="timerCircle" cx="160" cy="160" r="140" stroke="#2563eb" stroke-width="20" fill="none"
+                stroke-dasharray="879" stroke-dashoffset="0" />
+      </svg>
+      <div class="absolute inset-0 flex items-center justify-center">
+        <span id="timer" class="text-4xl font-semibold">30</span>
+      </div>
+    </div>
+    <div id="question" class="text-2xl font-bold mb-6 text-center"></div>
+    <div id="options" class="grid grid-cols-1 gap-4 w-full max-w-sm"></div>
+    <div id="score" class="mt-6 text-lg">Score: 0</div>
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <div id="resultsScreen" class="hidden h-screen flex flex-col items-center justify-center">
+    <h2 class="text-3xl font-bold mb-4">Quiz Complete!</h2>
+    <p id="finalScore" class="text-xl mb-4"></p>
+    <button id="restartBtn" class="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700">Restart</button>
+  </div>
+
+  <!-- DARK MODE TOGGLE -->
+  <button id="toggleDark" class="fixed bottom-4 right-4 px-4 py-2 bg-gray-800 text-white rounded-md">Dark Mode</button>
+
+  <!-- Script -->
+  <script src="script.js"></script>
+</body>
+</html>

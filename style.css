@@ -1,0 +1,13 @@
+/* Extra tweaks that aren’t handled by Tailwind */
+#timerCircle {
+  transition: stroke-dashoffset 1s linear;
+}
+
+/* You can add animations, focus styles, etc. */
+#options button {
+  transition: background 0.2s;
+}
+#options button:hover {
+  background-color: rgba(59, 130, 246, 0.2); /* light blue hover */
+}
+
